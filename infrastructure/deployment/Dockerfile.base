@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1.4
+
+# Base stage for all builds
+FROM node:20-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+WORKDIR /usr/src/app
+
+# Development stage
+FROM base AS development
+RUN apk add --no-cache python3 make g++
+COPY pnpm-lock.yaml ./
+COPY package.json ./
+COPY pnpm-workspace.yaml ./
+COPY tsconfig.json ./
+COPY turbo.json ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch
+COPY . .
+RUN pnpm install --frozen-lockfile
+CMD ["pnpm", "dev"]
+
+# Builder stage
+FROM base AS builder
+COPY pnpm-lock.yaml ./
+COPY package.json ./
+COPY pnpm-workspace.yaml ./
+COPY tsconfig.json ./
+COPY turbo.json ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm build
+
+# Production stage
+FROM base AS production
+COPY --from=builder /usr/src/app/dist ./dist
+COPY --from=builder /usr/src/app/package.json ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch --prod
+CMD ["node", "dist/main.js"]

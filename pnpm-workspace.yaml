@@ -1,0 +1,10 @@
+packages:
+  # all packages in subdirs of packages/ and services/
+  - 'packages/**'
+  - 'services/**'
+  # all apps in subdirs of apps/
+  - 'apps/**'
+  # exclude test directories
+  - '!**/test/**'
+  # exclude any files/folders starting with .
+  - '!**/.*/.'
