@@ -1,0 +1,3 @@
+[submodule "apps/frontend/standalone-ui"]
+	path = apps/frontend/standalone-ui
+	url = https://github.com/Axis-Fi/standalone-ui.git
